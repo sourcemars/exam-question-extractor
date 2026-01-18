@@ -1,0 +1,63 @@
+"""应用配置"""
+
+from pydantic_settings import BaseSettings
+from typing import Optional
+
+
+class Settings(BaseSettings):
+    """应用配置
+
+    所有配置项都可以通过环境变量或 .env 文件设置
+    """
+
+    # ==================== LLM配置 ====================
+    # LLM服务商选择: "claude" 或 "openai"
+    # 注意: 国内服务（如通义千问/Kimi/智谱）使用 "openai" 并配置 openai_base_url
+    llm_provider: str = "claude"
+
+    # ==================== API密钥 ====================
+    # Claude (Anthropic) API密钥
+    claude_api_key: Optional[str] = None
+
+    # OpenAI API密钥 (或兼容OpenAI格式的服务密钥，如通义千问、Kimi等)
+    openai_api_key: Optional[str] = None
+
+    # Moonshot (Kimi) API密钥 (备用字段，可选)
+    moonshot_api_key: Optional[str] = None
+
+    # ==================== 模型配置 ====================
+    # Claude模型名称
+    claude_model: str = "claude-3-5-sonnet-20241022"
+
+    # OpenAI模型名称 (或兼容服务的模型名称)
+    # 示例:
+    #   - OpenAI: "gpt-4o", "gpt-4o-mini"
+    #   - 通义千问: "qwen-plus", "qwen-vl-plus", "qwen-max"
+    #   - Kimi: "moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k"
+    #   - 智谱AI: "glm-4", "glm-4v"
+    openai_model: str = "gpt-4o-mini"
+
+    # ==================== 自定义端点 ====================
+    # OpenAI兼容服务的API端点 (用于国内服务或私有部署)
+    # 示例:
+    #   - 通义千问: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    #   - Kimi: "https://api.moonshot.cn/v1"
+    #   - 智谱AI: "https://open.bigmodel.cn/api/paas/v4"
+    openai_base_url: Optional[str] = None
+
+    # 数据库
+    database_url: str = "sqlite:///./exam_questions.db"
+
+    # 路径配置
+    pdf_dir: str = "data/pdfs"
+    image_dir: str = "data/images"
+
+    # 日志
+    log_level: str = "INFO"
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+
+settings = Settings()
