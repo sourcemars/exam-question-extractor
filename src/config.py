@@ -11,19 +11,24 @@ class Settings(BaseSettings):
     """
 
     # ==================== LLM配置 ====================
-    # LLM服务商选择: "claude" 或 "openai"
-    # 注意: 国内服务（如通义千问/Kimi/智谱）使用 "openai" 并配置 openai_base_url
+    # LLM服务商选择: "claude"、"openai" 或 "zhipu"
+    # - "claude": Claude (Anthropic)
+    # - "openai": OpenAI或兼容服务（通义千问、Kimi等）
+    # - "zhipu": 智谱AI原生SDK（推荐用于GLM-4V）
     llm_provider: str = "claude"
 
     # ==================== API密钥 ====================
     # Claude (Anthropic) API密钥
     claude_api_key: Optional[str] = None
 
-    # OpenAI API密钥 (或兼容OpenAI格式的服务密钥，如通义千问、Kimi等)
+    # OpenAI API密钥 (或兼容OpenAI格式的服务密钥，如智谱AI、通义千问、Kimi等)
     openai_api_key: Optional[str] = None
 
     # Moonshot (Kimi) API密钥 (备用字段，可选)
     moonshot_api_key: Optional[str] = None
+
+    # 通义千问 API密钥 (备用字段，可选)
+    qwen_api_key: Optional[str] = None
 
     # ==================== 模型配置 ====================
     # Claude模型名称

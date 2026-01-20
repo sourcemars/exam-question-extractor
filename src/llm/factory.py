@@ -4,6 +4,7 @@ from typing import Optional
 from .base import BaseLLMProvider
 from .providers.claude import ClaudeProvider
 from .providers.openai import OpenAIProvider
+from .providers.zhipu import ZhipuProvider
 
 
 class LLMFactory:
@@ -12,6 +13,7 @@ class LLMFactory:
     _providers = {
         "claude": ClaudeProvider,
         "openai": OpenAIProvider,
+        "zhipu": ZhipuProvider,  # 智谱AI原生SDK
     }
 
     @classmethod

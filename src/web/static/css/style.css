@@ -1,0 +1,56 @@
+/* 自定义样式 */
+
+/* 文本截断 */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 平滑滚动 */
+html {
+    scroll-behavior: smooth;
+}
+
+/* 选项悬停效果 */
+.option-item:hover {
+    background-color: #f3f4f6;
+}
+
+/* 页面过渡 */
+.page-transition {
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* 题目卡片悬停效果 */
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* 筛选表单样式 */
+.filter-form select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+    .question-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    nav, footer, .no-print {
+        display: none;
+    }
+
+    .bg-white {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+    }
+}

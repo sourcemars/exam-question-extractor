@@ -60,7 +60,7 @@ class QuestionOption(Base):
     option_text = Column(Text)
     option_image_path = Column(String(500))
     has_image = Column(Boolean, default=False)
-    is_correct = Column(Boolean, default=False)
+    is_correct = Column(Boolean, nullable=True, default=None)  # None=未知, True=正确, False=错误
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # 关系

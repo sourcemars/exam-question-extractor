@@ -115,3 +115,63 @@ class PDFParser:
         page_count = len(doc)
         doc.close()
         return page_count
+
+    def render_page_to_image(self, pdf_path: str, page_num: int, dpi: int = 200) -> str:
+        """
+        将单页渲染为PNG图片
+
+        Args:
+            pdf_path: PDF文件路径
+            page_num: 页码（从0开始）
+            dpi: 渲染分辨率（默认200）
+
+        Returns:
+            str: 图片保存路径
+        """
+        doc = fitz.open(pdf_path)
+        page = doc[page_num]
+
+        # 计算缩放比例
+        zoom = dpi / 72
+        mat = fitz.Matrix(zoom, zoom)
+        pix = page.get_pixmap(matrix=mat)
+
+        # 使用文件哈希生成唯一文件名
+        pdf_hash = self.get_file_hash(pdf_path)[:8]
+        image_filename = f"{pdf_hash}_page_{page_num + 1}.png"
+
+        # 保存到pages子目录
+        pages_dir = self.image_output_dir / "pages"
+        pages_dir.mkdir(parents=True, exist_ok=True)
+        image_path = pages_dir / image_filename
+
+        pix.save(str(image_path))
+        doc.close()
+
+        return str(image_path)
+
+    def render_all_pages(self, pdf_path: str, dpi: int = 200) -> List[Dict]:
+        """
+        渲染所有页面为图片
+
+        Args:
+            pdf_path: PDF文件路径
+            dpi: 渲染分辨率（默认200）
+
+        Returns:
+            List[Dict]: 包含页码和图片路径的列表
+                [{"page": 1, "image_path": "xxx.png"}, ...]
+        """
+        doc = fitz.open(pdf_path)
+        page_count = len(doc)
+        doc.close()
+
+        results = []
+        for page_num in range(page_count):
+            image_path = self.render_page_to_image(pdf_path, page_num, dpi)
+            results.append({
+                "page": page_num + 1,
+                "image_path": image_path
+            })
+
+        return results

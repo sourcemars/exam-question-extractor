@@ -80,12 +80,23 @@ class OpenAIProvider(BaseLLMProvider):
             # 添加图片
             if msg.images:
                 for img_path in msg.images:
-                    content.append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{self._encode_image(img_path)}"
-                        }
-                    })
+                    # 智谱AI GLM-4V: 直接使用base64，不需要data URI前缀
+                    if "glm" in self.default_model.lower():
+                        img_base64 = self._encode_image(img_path)
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": img_base64  # 智谱AI不需要前缀
+                            }
+                        })
+                    else:
+                        # OpenAI/Qwen等: 使用完整的data URI
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{self._encode_image(img_path)}"
+                            }
+                        })
 
             # 如果只有文本，直接使用字符串
             if len(content) == 1 and content[0]["type"] == "text":
@@ -104,7 +115,21 @@ class OpenAIProvider(BaseLLMProvider):
             return base64.standard_b64encode(img_file.read()).decode("utf-8")
 
     def supports_vision(self) -> bool:
-        return "gpt-4" in self.default_model or "gpt-4o" in self.default_model
+        """检查模型是否支持视觉输入"""
+        model = self.default_model.lower()
+        # OpenAI vision models
+        if "gpt-4" in model or "gpt-4o" in model:
+            return True
+        # 通义千问 vision models (qwen-vl-plus, qwen-vl-max)
+        if "qwen-vl" in model or "qwen2-vl" in model:
+            return True
+        # 智谱 vision models (glm-4v)
+        if "glm-4v" in model or "glm4v" in model:
+            return True
+        # Kimi vision models
+        if "vision" in model:
+            return True
+        return False
 
     def get_default_model(self) -> str:
         return self.default_model

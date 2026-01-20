@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}题目列表 - 题库系统{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 页面标题和统计 -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">题目列表</h1>
+        <span class="text-gray-500">共 {{ total }} 道题目</span>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">题型</label>
+                <select name="type" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">全部题型</option>
+                    {% for t in question_types %}
+                    <option value="{{ t }}" {% if question_type == t %}selected{% endif %}>
+                        {{ type_map.get(t, t) }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">难度</label>
+                <select name="difficulty" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">全部难度</option>
+                    {% for d in difficulties %}
+                    <option value="{{ d }}" {% if difficulty == d %}selected{% endif %}>
+                        {{ difficulty_map.get(d, d) }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">图片</label>
+                <select name="has_image" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">全部题目</option>
+                    <option value="1" {% if has_image == '1' %}selected{% endif %}>含图片</option>
+                    <option value="0" {% if has_image == '0' %}selected{% endif %}>纯文字</option>
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                    筛选
+                </button>
+                {% if question_type or difficulty or has_image %}
+                <a href="{{ url_for('questions.index') }}" class="ml-2 text-gray-500 hover:text-gray-700">
+                    清除筛选
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- 题目列表 -->
+    <div class="space-y-4">
+        {% if questions %}
+            {% for question in questions %}
+            <div class="bg-white rounded-lg shadow hover:shadow-md transition">
+                <a href="{{ url_for('questions.question_detail', question_id=question.id) }}" class="block p-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <!-- 题目编号和题干 -->
+                            <div class="flex items-start gap-3">
+                                <span class="text-gray-400 text-sm">#{{ question.id }}</span>
+                                {% if question.has_image %}
+                                <!-- 图片标识 -->
+                                <span class="flex-shrink-0 text-blue-500" title="包含图片">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </span>
+                                {% endif %}
+                                <div class="flex-1">
+                                    <p class="text-gray-800 line-clamp-2">
+                                        {% if question.question_text and question.question_text.strip() %}
+                                            {{ question.question_text[:200] }}{% if question.question_text|length > 200 %}...{% endif %}
+                                        {% elif question.has_image %}
+                                            <span class="text-gray-500 italic">[图片题目]</span>
+                                        {% else %}
+                                            <span class="text-gray-400 italic">[无题干内容]</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if question.has_image and question.question_image_path %}
+                                    <!-- 图片缩略图 -->
+                                    <div class="mt-2">
+                                        <img src="{{ question.question_image_path }}" alt="题目图片"
+                                             class="h-16 max-w-xs object-contain rounded border bg-gray-50">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 标签 -->
+                        <div class="flex gap-2 ml-4 flex-shrink-0">
+                            {% if question.question_type %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                {{ type_map.get(question.question_type, question.question_type) }}
+                            </span>
+                            {% endif %}
+                            {% if question.difficulty %}
+                            {% set color = difficulty_color_map.get(question.difficulty, 'gray') %}
+                            <span class="px-2 py-1 text-xs rounded-full
+                                {% if color == 'green' %}bg-green-100 text-green-800{% endif %}
+                                {% if color == 'yellow' %}bg-yellow-100 text-yellow-800{% endif %}
+                                {% if color == 'red' %}bg-red-100 text-red-800{% endif %}">
+                                {{ difficulty_map.get(question.difficulty, question.difficulty) }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+                暂无题目
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- 分页 -->
+    {% if total_pages > 1 %}
+    <div class="flex justify-center items-center space-x-2">
+        {% if page > 1 %}
+        <a href="{{ url_for('questions.index', page=page-1, type=question_type, difficulty=difficulty, has_image=has_image) }}"
+           class="px-4 py-2 bg-white border rounded-md hover:bg-gray-50 transition">
+            上一页
+        </a>
+        {% endif %}
+
+        <div class="flex items-center space-x-1">
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <span class="px-4 py-2 bg-blue-600 text-white rounded-md">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                <a href="{{ url_for('questions.index', page=p, type=question_type, difficulty=difficulty, has_image=has_image) }}"
+                   class="px-4 py-2 bg-white border rounded-md hover:bg-gray-50 transition">
+                    {{ p }}
+                </a>
+                {% elif p == page - 3 or p == page + 3 %}
+                <span class="px-2 text-gray-500">...</span>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if page < total_pages %}
+        <a href="{{ url_for('questions.index', page=page+1, type=question_type, difficulty=difficulty, has_image=has_image) }}"
+           class="px-4 py-2 bg-white border rounded-md hover:bg-gray-50 transition">
+            下一页
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

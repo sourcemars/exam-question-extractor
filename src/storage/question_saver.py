@@ -17,7 +17,7 @@ class QuestionSaver:
         """
         self.session = session
 
-    def save_questions(self, questions: List[Dict], pdf_path: str, pdf_hash: str) -> int:
+    def save_questions(self, questions: List[Dict], pdf_path: str, pdf_hash: str, force: bool = False) -> int:
         """
         保存题目到数据库
 
@@ -25,6 +25,7 @@ class QuestionSaver:
             questions: 题目列表
             pdf_path: PDF文件路径
             pdf_hash: PDF文件哈希
+            force: 强制重新处理（删除已有记录）
 
         Returns:
             int: 保存的题目数量
@@ -33,8 +34,15 @@ class QuestionSaver:
         pdf_source = self.session.query(PDFSource).filter_by(file_hash=pdf_hash).first()
 
         if pdf_source:
-            print(f"PDF文件已处理过: {pdf_path}")
-            return 0
+            if force:
+                print(f"强制模式: 删除已有记录并重新处理...")
+                self.session.delete(pdf_source)
+                self.session.commit()
+                pdf_source = None
+            else:
+                print(f"PDF文件已处理过: {pdf_path}")
+                print(f"使用 --force 参数强制重新处理")
+                return 0
 
         # 创建PDF源记录
         pdf_source = PDFSource(
@@ -70,6 +78,7 @@ class QuestionSaver:
 
             except Exception as e:
                 print(f"保存题目失败: {e}")
+                self.session.rollback()
                 continue
 
         # 更新PDF源状态
@@ -81,25 +90,39 @@ class QuestionSaver:
 
     def _create_question(self, q_data: Dict, pdf_source_id: int) -> Question:
         """创建题目对象"""
+        # 检查是否有图片
+        has_image = bool(q_data.get('has_figure', False) and q_data.get('question_image_path'))
+
+        # 处理 correct_answer - 可能是字符串或列表
+        correct_answer = q_data.get('correct_answer')
+        if isinstance(correct_answer, list):
+            correct_answer = ''.join(correct_answer)  # ['A', 'B'] -> 'AB'
+
         return Question(
             pdf_source_id=pdf_source_id,
             question_text=q_data.get('question_text'),
             question_type=q_data.get('question_type'),
             difficulty=q_data.get('difficulty'),
-            correct_answer=q_data.get('correct_answer'),
+            correct_answer=correct_answer,
             explanation=q_data.get('explanation'),
-            has_image=False,  # MVP版本先不处理图片
-            metadata=q_data
+            has_image=has_image,
+            question_image_path=q_data.get('question_image_path'),
+            page_number=q_data.get('page_number'),
+            extra_metadata=q_data
         )
 
     def _create_option(self, opt_data: Dict, question_id: int) -> QuestionOption:
         """创建选项对象"""
+        # 检查是否有图片
+        has_image = bool(opt_data.get('has_figure', False) and opt_data.get('option_image_path'))
+
         return QuestionOption(
             question_id=question_id,
             option_key=opt_data.get('key'),
             option_text=opt_data.get('text'),
-            is_correct=opt_data.get('is_correct', False),
-            has_image=False
+            is_correct=opt_data.get('is_correct'),
+            has_image=has_image,
+            option_image_path=opt_data.get('option_image_path')
         )
 
     def _save_tags(self, tags_data: Dict, question_id: int):
